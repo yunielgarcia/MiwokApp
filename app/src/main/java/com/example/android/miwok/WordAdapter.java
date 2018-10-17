@@ -15,6 +15,7 @@ import java.util.ArrayList;
 public class WordAdapter extends ArrayAdapter<Word> {
 
     private static final String LOG_TAG = WordAdapter.class.getSimpleName();
+    private int mColor;
 
     /**
      * This is our own custom constructor (it doesn't mirror a superclass constructor).
@@ -24,12 +25,14 @@ public class WordAdapter extends ArrayAdapter<Word> {
      * @param context        The current context. Used to inflate the layout file.
      * @param words A List of Words objects to display in a list
      */
-    public WordAdapter(Context context, ArrayList<Word> words) {
+    public WordAdapter(Context context, ArrayList<Word> words, int categoryColor) {
         // Here, we initialize the ArrayAdapter's internal storage for the context and the list.
         // the second argument is used when the ArrayAdapter is populating a single TextView.
         // Because this is a custom adapter for two TextViews and an ImageView, the adapter is not
         // going to use this second argument, so it can be any value. Here, we used 0.
         super(context, 0, words);
+
+        mColor = categoryColor;
     }
 
     @NonNull
@@ -41,6 +44,10 @@ public class WordAdapter extends ArrayAdapter<Word> {
             listItemView = LayoutInflater.from(getContext()).inflate(
                     R.layout.word_item_layout, parent, false);
         }
+
+
+
+        listItemView.setBackgroundColor(getContext().getResources().getColor(mColor));
 
         // Get the {@link Word} object located at this position in the list
         Word currentWord = getItem(position);
@@ -59,7 +66,13 @@ public class WordAdapter extends ArrayAdapter<Word> {
         miwokTextView.setText(currentWord.getmMiwokTranslation());
 
         ImageView imageView = (ImageView) listItemView.findViewById(R.id.image_for_word);
-        imageView.setImageResource(currentWord.getmWordImageResourceId());
+
+        if (currentWord.getmWordImageResourceId() != 0) {
+            imageView.setImageResource(currentWord.getmWordImageResourceId());
+        } else {
+            imageView.setVisibility(View.GONE);
+        }
+
 
         return listItemView;
 
