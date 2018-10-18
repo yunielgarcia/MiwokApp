@@ -2,16 +2,24 @@ package com.example.android.miwok;
 
 public class Word {
 
-    /** Default translation for the word*/
+    /**
+     * Default translation for the word
+     */
     private String mDefaultTranslation;
 
-    /** Miwok translation for the word*/
+    /**
+     * Miwok translation for the word
+     */
     private String mMiwokTranslation;
 
-    /** Image for the word*/
+    /**
+     * Image for the word
+     */
     private int mWordImageResourceId;
 
-    /** Audio for the word*/
+    /**
+     * Audio for the word
+     */
     private int mWordAudioResourceId;
 
     public Word(String defaultTranslation, String miwokTranslation, int audioId) {
@@ -42,5 +50,16 @@ public class Word {
 
     public int getmWordAudioResourceId() {
         return mWordAudioResourceId;
+    }
+
+    /**String representation of the state of the object*/
+    @Override
+    public String toString() {
+        return "Word{" +
+                "mDefaultTranslation='" + mDefaultTranslation + '\'' +
+                ", mMiwokTranslation='" + mMiwokTranslation + '\'' +
+                ", mWordImageResourceId=" + mWordImageResourceId +
+                ", mWordAudioResourceId=" + mWordAudioResourceId +
+                '}';
     }
 }
