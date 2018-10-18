@@ -15,6 +15,9 @@
  */
 package com.example.android.miwok;
 
+import android.content.Context;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -32,11 +35,44 @@ public class NumbersActivity extends AppCompatActivity {
 
     public ArrayList<Word> words = new ArrayList<>();
     private MediaPlayer mMediaPlayer;
+    private Context mContext;
+
+    /**
+     * This listener gets triggered whenever the audio focus changes
+     * (i.e., we gain or lose audio focus because of another app or device).
+     */
+    private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+        @Override
+        public void onAudioFocusChange(int focusChange) {
+            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||
+                    focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+                // The AUDIOFOCUS_LOSS_TRANSIENT case means that we've lost audio focus for a
+                // short amount of time. The AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK case means that
+                // our app is allowed to continue playing sound but at a lower volume. We'll treat
+                // both cases the same way because our app is playing short sound files.
+
+                // Pause playback and reset player to the start of the file. That way, we can
+                // play the word from the beginning when we resume playback.
+                mMediaPlayer.pause();
+                mMediaPlayer.seekTo(0);
+            } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+                // The AUDIOFOCUS_GAIN case means we have regained focus and can resume playback.
+                mMediaPlayer.start();
+            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                // The AUDIOFOCUS_LOSS case means we've lost audio focus and
+                // Stop playback and clean up resources
+                releaseMediaPlayer();
+            }
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_numbers);
+
+        mContext = this;
 
         words.add(new Word("one", "lutti", R.drawable.number_one, R.raw.number_one));
         words.add(new Word("two", "otiiko", R.drawable.number_two, R.raw.number_two));
@@ -58,9 +94,25 @@ public class NumbersActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                /* In case change track without finishing the current one */
                 releaseMediaPlayer();
                 mMediaPlayer = MediaPlayer.create(NumbersActivity.this, words.get(position).getmWordAudioResourceId());
-                mMediaPlayer.start();
+
+                // Audio Manager instance
+                AudioManager audioManager = (AudioManager) mContext.getSystemService(mContext.AUDIO_SERVICE);
+
+                // Request the audio permission, with the focus change listener implemented above
+                assert audioManager != null;
+                int result = audioManager.requestAudioFocus(mOnAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+
+                if(result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
+                    mMediaPlayer.start();
+                }
+
+
+
+                /*Listening in case of completion*/
                 mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     @Override
                     public void onCompletion(MediaPlayer mp) {
@@ -86,5 +138,11 @@ public class NumbersActivity extends AppCompatActivity {
             // is not configured to play an audio file at the moment.
             mMediaPlayer = null;
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        releaseMediaPlayer();
     }
 }
